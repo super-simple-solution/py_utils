@@ -23,7 +23,7 @@ class TableExtractionMode(Enum):
     ROWS = 1
     COLS = 2
 
-def extract_table(image_path, mode, slice_obj):
+def extract_table(image_path, mode, slice_obj, shouldSaveImages = False):
     # 读取图片
     image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
     if image is None:
@@ -69,21 +69,28 @@ def extract_table(image_path, mode, slice_obj):
     for i, (x, y, w, h) in enumerate(bounding_boxes):
         if start_row <= i < stop_row:
             extracted_images.append(image[y:y + h, x:x + w])
+    # 保存提取的图像
+    if shouldSaveImages:
+      saveImages(extracted_images, output_path)
     return [ocrProcessor(x) for x in extracted_images]
 
+def saveImages(images, output_path):
+    for idx, img in enumerate(images):
+      cv2.imwrite(f"{output_path}extracted_{idx}.png", img)
+
 # 测试代码
-in_dir = '/Volumes/g/Downloads/line/'  # 替换为你的表格图片路径
-output_dir = '/Volumes/g/Downloads/line/'
-slice_obj = slice(1, -1)  # 示例：设置为 None
+in_dir = '/Volumes/g/Downloads/uni_wechat/'  # 替换为你的表格图片路径
+output_dir = '/Volumes/g/Downloads/uni_wechat/'
+slice_obj = slice(0, 1)
 
 # read all file in image_path
 import os
 for file in os.listdir(in_dir):
-    if file.endswith('.jpg') or file.endswith('.png'):
+    if file.endswith(('.jpg', '.jpeg', '.png')):
         in_path = os.path.join(in_dir, file)
         output_path = os.path.join(output_dir, file)
         # 提取结果
-        extracted = extract_table(in_path, TableExtractionMode.COLS, slice_obj)
+        extracted = extract_table(in_path, TableExtractionMode.COLS, slice_obj, True)
         # print('extracted', extracted)
         # write extracted to json file
         with open(f"{output_path}.json", "w") as f:
